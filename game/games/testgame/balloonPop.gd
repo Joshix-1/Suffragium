@@ -13,7 +13,7 @@ var colors := {
 	"Yellow": Color.yellow,
 	"Blue": Color.blue,
 	"Purple": Color.purple,
-	"Orange": Color.orange,
+	"Pink": Color.orange,
 }
 
 var points := 0
