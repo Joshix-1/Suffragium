@@ -6,15 +6,16 @@ var _preview_scene := preload("res://menu/gamedisplay.tscn")
 onready var _grid := $mainmenu/ScrollContainer/GridContainer
 onready var _main := $mainmenu
 
+
 func _ready():
 	_find_games()
 	_build_menu()
 
 
-func load_game(game_cfg:ConfigFile):
+func load_game(game_cfg: ConfigFile):
 	# load the games main scene
-	var scene = load(game_cfg.get_meta("folder_path")+game_cfg.get_value("game", "main_scene"))
-	
+	var scene = load(game_cfg.get_meta("folder_path") + game_cfg.get_value("game", "main_scene"))
+
 	var err := get_tree().change_scene_to(scene)
 	if err != OK:
 		prints("Error", err)
@@ -23,11 +24,11 @@ func load_game(game_cfg:ConfigFile):
 
 
 # return to the level select
-func end_game(message:="", _status=null):
+func end_game(message := "", _status = null):
 	get_tree().change_scene("res://menu/emptySzene.tscn")
 	_main.show()
 	# this behavior is subject to change
-	if !message.empty(): 
+	if !message.empty():
 		OS.alert(message)
 
 
@@ -36,7 +37,7 @@ func _build_menu():
 	for c in _grid.get_children():
 		c.queue_free()
 	_main.show()
-	
+
 	#making the buttons
 	for game in _games:
 		var display = _preview_scene.instance()
@@ -55,19 +56,16 @@ func _find_games():
 		while file_name != "":
 			if dir.current_is_dir():
 				var game_path = "res://games/" + file_name + "/game.cfg"
-				
+
 				_load_game_cfg_file(game_path)
 			file_name = dir.get_next()
 
 
 # load a config file into _games
-func _load_game_cfg_file(path:String):
+func _load_game_cfg_file(path: String):
 	var f := ConfigFile.new()
-	if f.load(path) != OK: return
-	f.set_meta("folder_path", path.get_base_dir()+"/")
+	if f.load(path) != OK:
+		return
+	f.set_meta("folder_path", path.get_base_dir() + "/")
 	_games.push_back(f)
 	return false
-
-
-
-
