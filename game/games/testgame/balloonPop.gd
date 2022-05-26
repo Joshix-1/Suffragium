@@ -44,15 +44,16 @@ func _spawn():
 	var possible := colors.values()
 	possible.erase(search_color)
 
-	#spawn 5-10 balloons of any color exept the search color
-	for _i in range(_rng.randi_range(5, 10)):
+	#spawn 6-12 balloons of any color exept the search color
+	for _i in range(_rng.randi_range(6, 12)):
 		_spawn_color(possible[_rng.randi_range(0, possible.size() - 1)])
-		
+
 	#spawn 1 balloon with the search color
 	_spawn_color(search_color)
 
 	stage += 1
 	_update_status()
+
 
 # spawns one balloon of the given color
 func _spawn_color(color: Color):
@@ -62,7 +63,7 @@ func _spawn_color(color: Color):
 	var max_pos: Vector2 = _area.rect_size - b.rect_size * b.rect_scale
 	b.rect_position.x = _rng.randf_range(0, max_pos.x)
 	b.rect_position.y = _rng.randf_range(0, max_pos.y)
-	
+
 	b.set("move_offset", _rng.randf_range(0, 2 * PI))
 	b.set("speed", _rng.randf_range(0.9, 4))
 
