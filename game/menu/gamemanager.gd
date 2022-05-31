@@ -51,7 +51,7 @@ func load_game_data(file_name: String, game = null):
 	game = _last_loaded_game if game == null else game
 	if not game:  # game should be the folder_name, not null or ""
 		return null
-	
+
 	if not file_name in GAME_DATA_CACHE:
 		GAME_DATA_CACHE[file_name] = {}  # populate with default
 		var file = File.new()
