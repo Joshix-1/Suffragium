@@ -33,12 +33,20 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func save_game_data(file_name: String, data, game = null) -> int:
-	game = _last_loaded_game if game == null else game
-	if not game:  # game should be the folder_name, not null or ""
+func save_game_data(file_name: String, data) -> int:
+	if file_name.begins_with("_"):
+		# file_name cannot begin with "_", that is reserved for special stuff
+		return ERR_INVALID_PARAMETER
+	if not _last_loaded_game:
 		return ERR_INVALID_DATA
+	return _save_game_data(file_name, data, _last_loaded_game)
+	
+
+
+func _save_game_data(file_name: String, data, game: String) -> int:
+	# private function, don't use this in a game
 	if not file_name in GAME_DATA_CACHE:
-		load_game_data(file_name, game)
+		_load_game_data(file_name, game)
 	GAME_DATA_CACHE[file_name][game] = data
 	var file = File.new()
 	file.open("user://" + file_name + ".json", File.WRITE)
@@ -47,11 +55,17 @@ func save_game_data(file_name: String, data, game = null) -> int:
 	return OK
 
 
-func load_game_data(file_name: String, game = null):
-	game = _last_loaded_game if game == null else game
-	if not game:  # game should be the folder_name, not null or ""
+func load_game_data(file_name: String):
+	if file_name.begins_with("_"):
+		# file_name cannot begin with "_", that is reserved for special stuff
 		return null
+	if not _last_loaded_game:
+		return null
+	return _load_game_data(file_name, _last_loaded_game)
 
+
+func _load_game_data(file_name: String, game: String):
+	# private function, don't use this in a game
 	if not file_name in GAME_DATA_CACHE:
 		GAME_DATA_CACHE[file_name] = {}  # populate with default
 		var file = File.new()
@@ -77,7 +91,7 @@ func get_high_score(player = null, game = null):
 		return null
 	if player == null:
 		player = "p"  # as default; this is just for the future
-	var data = load_game_data("__game_scores__", game)
+	var data = _load_game_data("_game_scores", game)
 	if data == null:
 		return null
 	if not "scores" in data:
@@ -98,13 +112,13 @@ func end_game(message := "", score = null, _status = null):
 	_main.show()
 
 	if _last_loaded_game and score != null:
-		var data = load_game_data("__game_scores__")
+		var data = _load_game_data("_game_scores", _last_loaded_game)
 		if not data:
 			data = {}
 		if not "scores" in data:
 			data["scores"] = []
 		data["scores"].append([score, player_name])
-		save_game_data("__game_scores__", data)
+		_save_game_data("_game_scores", data, _last_loaded_game)
 
 	# this behavior is subject to change
 	if message:
