@@ -9,10 +9,14 @@ func setup(game_cfg: ConfigFile):
 	game_file = game_cfg
 
 	$VBoxContainer/Label.text = game_cfg.get_value("game", "name")
-	$VBoxContainer/RichTextLabel.bbcode_text = game_cfg.get_value("game", "desc")
-
+	$VBoxContainer/RichTextLabel.bbcode_text = (
+		game_cfg.get_value("game", "desc")
+		+ "\n\n"
+		+ "Highscore: "
+		+ str(game_cfg.get_meta("_high_score"))
+	)
 	var icon: Texture = load(
-		str(game_cfg.get_meta("folder_path"), game_cfg.get_value("game", "icon"))
+		str(game_cfg.get_meta("_folder_path"), game_cfg.get_value("game", "icon"))
 	)
 	if icon == null:
 		icon = load("res://icon.png")
