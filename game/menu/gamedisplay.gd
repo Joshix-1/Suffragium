@@ -9,12 +9,8 @@ func setup(game_cfg: ConfigFile):
 	game_file = game_cfg
 
 	$VBoxContainer/Label.text = game_cfg.get_value("game", "name")
-	$VBoxContainer/RichTextLabel.bbcode_text = (
-		game_cfg.get_value("game", "desc")
-		+ "\n\n"
-		+ "Highscore: "
-		+ str(game_cfg.get_meta("_high_score"))
-	)
+	_on_VBoxContainer_draw()
+	
 	var icon: Texture = load(
 		str(game_cfg.get_meta("_folder_path"), game_cfg.get_value("game", "icon"))
 	)
@@ -37,6 +33,18 @@ func setup(game_cfg: ConfigFile):
 	text += "Version: " + game_cfg.get_value("game", "version") + "\n"
 	$InfoDialog/Container/descCont/Statslab.text = text
 
+
+func _on_VBoxContainer_draw():
+	print(game_file.get_meta("_game_name"))
+	var text = (
+		game_file.get_value("game", "desc")
+		+ "\n\n"
+		+ "Highscore: "
+		+ str(game_file.get_meta("_high_score"))
+	)
+	# update the high_score displayed in $VBoxContainer/RichTextLabel
+	if $VBoxContainer/RichTextLabel.bbcode_text != text:
+		$VBoxContainer/RichTextLabel.bbcode_text = text
 
 func _on_loadbutton_pressed():
 	emit_signal("pressed", game_file)
