@@ -2,7 +2,7 @@
 extends MarginContainer
 
 const END_MESSAGE := "You got %s points!"
-const COLOR_MESSAGE := "Pop the %s or the golden balloon"
+const COLOR_MESSAGE := "Shoot the [color=#%s]%s[/color] or the [color=#%s]golden[/color] balloon!"
 const STATUS_MESSAGE := "You'r in stage %s/10 and have %s points!"
 
 const COLORS := {
@@ -11,9 +11,13 @@ const COLORS := {
 	"yellow": Color.yellow,
 	"blue": Color.blue,
 	"purple": Color.purple,
-	"orange": Color.orange,
+	"pink": Color.hotpink,
+	"brown": Color.saddlebrown,
+	"grey": Color.gray,
+	"turquoise": Color.turquoise,
 }
 const GOLD_COLOR := Color.goldenrod
+const DIFFICULTY := 3
 
 var balloon_scene := preload("res://games/balloonshooting/balloon.tscn")
 
@@ -22,13 +26,13 @@ var search_color: Color
 var stage := 0
 var stage_with_gold := 0
 var time := 0.0
-
-var _noise := OpenSimplexNoise.new()
+var last_spawn_time: int  # in ms
+var noise := OpenSimplexNoise.new()
 
 onready var _timer := $Timer
 onready var _respawn_timer := $RespawnTimer
-onready var _color_label := $VBoxContainer/HBoxContainer/ColorLabel
-onready var _status_label := $VBoxContainer/HBoxContainer/StatusLabel
+onready var _color_label := $VBoxContainer/CanvasLayer/HBoxContainer/ColorLabel
+onready var _status_label := $VBoxContainer/CanvasLayer/HBoxContainer/StatusLabel
 onready var _area := $VBoxContainer/balloonArea
 onready var _rng := RandomNumberGenerator.new()
 onready var _particles := $VBoxContainer/Particles2D
@@ -38,32 +42,38 @@ func _ready():
 	_rng.randomize()
 	stage_with_gold = _rng.randi_range(0, 9)
 
-	_noise.seed = _rng.randi()
-	#_noise.octaves = 4
-	#_noise.period = 0.1
-	#_noise.persistence = 0.8
+	noise.seed = _rng.randi()
+	noise.octaves = 4
+	noise.period = 50.0 / DIFFICULTY
+	noise.persistence = 0.5
 
-	start()
+	randomize_search_color()
 
-
-func start():
-	var i = _rng.randi_range(0, COLORS.size() - 1)
-	_color_label.text = COLOR_MESSAGE % COLORS.keys()[i]
-	search_color = COLORS.values()[i]
 	call_deferred("_spawn")
+
+
+func randomize_search_color():
+	var i = _rng.randi_range(0, COLORS.size() - 1)
+	search_color = COLORS.values()[i]
+	_color_label.bbcode_text = (
+		COLOR_MESSAGE
+		% [search_color.to_html(false), COLORS.keys()[i], GOLD_COLOR.to_html(false)]
+	)
 
 
 # Animates all balloons
 func _process(_delta):
+	# print(Engine.get_frames_per_second())
 	time += _delta
-	print(time)
 	for balloon in _area.get_children():
+		var speed = 22.0 + hash(balloon) % 5 + 2.0 * DIFFICULTY
+
+		var move_angle: float = (1.0 + noise.get_noise_1d(time)) * PI + hash(balloon)
+
+		balloon.rect_position += speed * _delta * Vector2(cos(move_angle), sin(move_angle))
+
 		var balloon_size = balloon.rect_size * balloon.rect_scale
 		var window_size = _area.rect_size
-
-		var speed = 25.0 + hash(balloon) % 5
-		var move_angle = hash(balloon) + (1.0 + _noise.get_noise_2d(time, hash(balloon))) * PI
-		balloon.rect_position += speed * _delta * Vector2(cos(move_angle), sin(move_angle))
 
 		if balloon.rect_position.x < -balloon_size.x:
 			balloon.rect_position.x = window_size.x
@@ -84,15 +94,20 @@ func _spawn():
 	if stage_with_gold == stage:
 		_spawn_color(GOLD_COLOR)
 
-	#spawn 3-7 balloons of any color exept the search color
-	for _i in range(_rng.randi_range(10, 15)):
-		_spawn_color(possible[_rng.randi_range(0, possible.size() - 1)])
+	possible.shuffle()
+	# spawn balloons of any color exept the search color
+	var balloon_count = _rng.randi_range(
+		max(possible.size() * (DIFFICULTY - 1) + 1, 4), possible.size() * DIFFICULTY + stage
+	)
+	for _i in range(balloon_count):
+		_spawn_color(possible[_i % possible.size()])
 
-	#spawn 1 balloon with the search color
+	# spawn 1 balloon with the search color
 	_spawn_color(search_color)
 
 	stage += 1
 	_update_status()
+	last_spawn_time = OS.get_ticks_msec()
 
 
 # spawns one balloon of the given color
@@ -122,13 +137,15 @@ func _on_destroy(color: Color, button = null):
 			)
 			_particles.restart()
 		if is_search:
-			points += 1
+			var max_time = 20_000
+			var took = min(OS.get_ticks_msec() - last_spawn_time, max_time)
+			points += int(round(range_lerp(took, 0, max_time, 3 * DIFFICULTY, 1)))
 			_delete_all()
 			_respawn_timer.start()
 		else:
-			points += 5
+			points += 5 * DIFFICULTY
 	else:
-		points -= 1
+		points -= DIFFICULTY
 	_update_status()
 
 
@@ -140,8 +157,9 @@ func _delete_all():
 # timer leaves a little time between stage end and the next stage start or game end
 func _on_RespawnTimer_timeout():
 	if stage >= 10:
-		GameManager.end_game(END_MESSAGE % points)
+		GameManager.end_game(END_MESSAGE % points, points)
 		return
+	randomize_search_color()
 	_spawn()
 
 

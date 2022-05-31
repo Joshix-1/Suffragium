@@ -34,22 +34,29 @@ one_shot = true
 margin_right = 1024.0
 margin_bottom = 600.0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="CanvasLayer" type="CanvasLayer" parent="VBoxContainer"]
+layer = 100
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/CanvasLayer"]
 margin_right = 1024.0
 margin_bottom = 14.0
 
-[node name="ColorLabel" type="Label" parent="VBoxContainer/HBoxContainer"]
+[node name="ColorLabel" type="RichTextLabel" parent="VBoxContainer/CanvasLayer/HBoxContainer"]
+show_behind_parent = true
+margin_right = 510.0
 margin_bottom = 14.0
+rect_min_size = Vector2( 100, 14 )
+size_flags_horizontal = 3
+bbcode_enabled = true
 
-[node name="StatusLabel" type="Label" parent="VBoxContainer/HBoxContainer"]
-margin_left = 4.0
+[node name="StatusLabel" type="Label" parent="VBoxContainer/CanvasLayer/HBoxContainer"]
+margin_left = 514.0
 margin_right = 1024.0
 margin_bottom = 14.0
 size_flags_horizontal = 3
 align = 2
 
 [node name="balloonArea" type="Control" parent="VBoxContainer"]
-margin_top = 18.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_horizontal = 3
