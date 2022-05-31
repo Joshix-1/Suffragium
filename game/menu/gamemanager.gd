@@ -33,7 +33,10 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func save_game_data(file_name: String, game: String, data):
+func save_game_data(file_name: String, game = null, data = null) -> int:
+	game = _last_loaded_game if game == null else game
+	if not game or data == null:  # game should be the folder_name, not null or ""
+		return ERR_INVALID_DATA
 	if not file_name in GAME_DATA_CACHE:
 		load_game_data(file_name, game)
 	GAME_DATA_CACHE[file_name][game] = data
@@ -41,9 +44,14 @@ func save_game_data(file_name: String, game: String, data):
 	file.open("user://" + file_name + ".json", File.WRITE)
 	file.store_string(JSON.print(GAME_DATA_CACHE[file_name]))
 	file.close()
+	return OK
 
 
-func load_game_data(file_name: String, game: String):
+func load_game_data(file_name: String, game = null):
+	game = _last_loaded_game if game == null else game
+	if not game:  # game should be the folder_name, not null or ""
+		return null
+	
 	if not file_name in GAME_DATA_CACHE:
 		GAME_DATA_CACHE[file_name] = {}  # populate with default
 		var file = File.new()
@@ -64,9 +72,8 @@ func load_game_data(file_name: String, game: String):
 
 
 func get_high_score(game = null, player: String = "p"):
-	if game == null:
-		game = _last_loaded_game
-	if game == null:
+	game = _last_loaded_game if game == null else game
+	if not game:  # game should be the folder_name, not null or ""
 		return null
 	var data = load_game_data("game_scores", game)
 	if data == null:
