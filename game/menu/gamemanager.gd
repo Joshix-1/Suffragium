@@ -1,7 +1,7 @@
 extends Node
 
-const GAME_DATA_CACHE = {}
-const GAMES: Dictionary = {}  # type: Dictionary[str, ConfigFile]
+const GAME_DATA_CACHE := {}  # type: Dictionary[String, Dictionary[String, ...]]
+const GAMES := {}  # type: Dictionary[String, ConfigFile]
 
 var _preview_scene := preload("res://menu/gamedisplay.tscn")
 var _last_loaded_game: String = ""
@@ -11,7 +11,6 @@ onready var _main := $mainmenu
 
 
 func _ready():
-	load_game_data()  # populate GAME_DATA_CACHE
 	_find_games()
 	_build_menu()
 
@@ -27,41 +26,38 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func save_game_data(game, data, write_to_file = true):
-	GAME_DATA_CACHE[game] = data
-	if write_to_file:
+func save_game_data(file_name: String, game: String, data):
+	if not file_name in GAME_DATA_CACHE:
+		load_game_data(file_name, game)
+	GAME_DATA_CACHE[file_name][game] = data
+	var file = File.new()
+	file.open("user://" + file_name + ".json", File.WRITE)
+	file.store_string(JSON.print(GAME_DATA_CACHE[file_name]))
+	file.close()
+
+
+func load_game_data(file_name: String, game: String):
+	if not file_name in GAME_DATA_CACHE:
+		GAME_DATA_CACHE[file_name] = {}  # populate with default
 		var file = File.new()
-		file.open("user://save_game.dat", File.WRITE)
-		file.store_string(JSON.print(GAME_DATA_CACHE))
-		file.close()
+		file.open("user://" + file_name + ".json", File.READ)
+		if file.is_open():
+			var content = file.get_as_text()
+			file.close()
+			var parse_result = JSON.parse(content)
+			if not parse_result.error:
+				var data = parse_result.result
+				for game in data.keys():
+					GAME_DATA_CACHE[file_name][game] = data[game]
 
-
-func load_game_data(game = null):
-	if game == null:
-		var file = File.new()
-		file.open("user://save_game.dat", File.READ)
-		if not file.is_open():
-			return null
-		var content = file.get_as_text()
-		file.close()
-		if not content:
-			return null
-		var parse_result = JSON.parse(content)
-		if parse_result.error:
-			return null
-		var data = parse_result.result
-		for game in data.keys():
-			GAME_DATA_CACHE[game] = data[game]
-		return data
-
-	if game in GAME_DATA_CACHE:
-		return GAME_DATA_CACHE[game]
+	if game in GAME_DATA_CACHE[file_name]:
+		return GAME_DATA_CACHE[file_name][game]
 
 	return null
 
 
-func get_high_score(game, player: String = "player"):
-	var data = load_game_data(game)
+func get_high_score(game, player: String = "p"):
+	var data = load_game_data("game_scores", game)
 	if data == null:
 		return null
 	if not "scores" in data:
@@ -76,20 +72,19 @@ func get_high_score(game, player: String = "player"):
 
 # return to the level select
 func end_game(message := "", score = null, _status = null):
-	var player_name = "player"  # this is here to allow for future addition of player names
+	var player_name = "p"  # this is here to allow for future addition of player names
 
 	get_tree().change_scene("res://menu/emptySzene.tscn")
 	_main.show()
 
 	if _last_loaded_game and score != null:
-		var data = load_game_data(_last_loaded_game)
+		var data = load_game_data("game_scores", _last_loaded_game)
 		if not data:
 			data = {}
 		if not "scores" in data:
 			data["scores"] = []
 		data["scores"].append([score, player_name])
-		data["scores"].sort()
-		save_game_data(_last_loaded_game, data)
+		save_game_data("game_scores", _last_loaded_game, data)
 		GAMES[_last_loaded_game].set_meta("_high_score", get_high_score(_last_loaded_game))
 
 	# this behavior is subject to change

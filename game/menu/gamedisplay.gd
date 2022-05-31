@@ -35,13 +35,12 @@ func setup(game_cfg: ConfigFile):
 
 
 func _on_VBoxContainer_draw():
-	print(game_file.get_meta("_game_name"))
-	var text = (
-		game_file.get_value("game", "desc")
-		+ "\n\n"
-		+ "Highscore: "
-		+ str(game_file.get_meta("_high_score"))
-	)
+	var text = game_file.get_value("game", "desc")
+
+	var high_score = game_file.get_meta("_high_score")
+	if high_score != null:
+		text += "\n\nHighscore: " + str(high_score)
+
 	# update the high_score displayed in $VBoxContainer/RichTextLabel
 	if $VBoxContainer/RichTextLabel.bbcode_text != text:
 		$VBoxContainer/RichTextLabel.bbcode_text = text
