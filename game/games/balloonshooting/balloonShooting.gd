@@ -3,7 +3,7 @@ extends MarginContainer
 
 const END_MESSAGE := "You got %s points!"
 const COLOR_MESSAGE := "Shoot the [color=#%s]%s[/color] or the [color=#%s]golden[/color] balloon!"
-const STATUS_MESSAGE := "You'r in stage %s/10 and have %s points!"
+const STATUS_MESSAGE := "You'r in stage %s/10 and have %s points! (Your highscore is %s)"
 
 const COLORS := {
 	"red": Color.red,
@@ -164,4 +164,7 @@ func _on_RespawnTimer_timeout():
 
 
 func _update_status():
-	_status_label.text = STATUS_MESSAGE % [stage, points]
+	var high_score = GameManager.get_high_score()
+	if high_score == null:
+		high_score = points
+	_status_label.text = STATUS_MESSAGE % [stage, points, max(points, high_score)]
