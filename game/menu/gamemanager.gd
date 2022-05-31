@@ -63,7 +63,11 @@ func load_game_data(file_name: String, game: String):
 	return null
 
 
-func get_high_score(game, player: String = "p"):
+func get_high_score(game = null, player: String = "p"):
+	if game == null:
+		game = _last_loaded_game
+	if game == null:
+		return null
 	var data = load_game_data("game_scores", game)
 	if data == null:
 		return null
