@@ -33,9 +33,9 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func save_game_data(file_name: String, game = null, data = null) -> int:
+func save_game_data(file_name: String, data, game = null) -> int:
 	game = _last_loaded_game if game == null else game
-	if not game or data == null:  # game should be the folder_name, not null or ""
+	if not game:  # game should be the folder_name, not null or ""
 		return ERR_INVALID_DATA
 	if not file_name in GAME_DATA_CACHE:
 		load_game_data(file_name, game)
@@ -71,11 +71,13 @@ func load_game_data(file_name: String, game = null):
 	return null
 
 
-func get_high_score(game = null, player: String = "p"):
+func get_high_score(player = null, game = null):
 	game = _last_loaded_game if game == null else game
 	if not game:  # game should be the folder_name, not null or ""
 		return null
-	var data = load_game_data("game_scores", game)
+	if player == null:
+		player = "p"  # as default; this is just for the future
+	var data = load_game_data("__game_scores__", game)
 	if data == null:
 		return null
 	if not "scores" in data:
@@ -96,13 +98,13 @@ func end_game(message := "", score = null, _status = null):
 	_main.show()
 
 	if _last_loaded_game and score != null:
-		var data = load_game_data("game_scores", _last_loaded_game)
+		var data = load_game_data("__game_scores__")
 		if not data:
 			data = {}
 		if not "scores" in data:
 			data["scores"] = []
 		data["scores"].append([score, player_name])
-		save_game_data("game_scores", _last_loaded_game, data)
+		save_game_data("__game_scores__", data)
 
 	# this behavior is subject to change
 	if message:
