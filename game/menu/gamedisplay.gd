@@ -42,7 +42,7 @@ func setup(game_cfg: ConfigFile):
 func _on_VBoxContainer_draw():
 	var text = game_file.get_value("game", "desc")
 
-	var high_score = GameManager.get_high_score(game_file.get_meta("folder_name"))
+	var high_score = GameManager.get_high_score(null, game_file.get_meta("folder_name"))
 	if high_score != null:
 		text += "\n\nHighscore: " + str(high_score)
 
