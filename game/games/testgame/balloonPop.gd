@@ -107,7 +107,7 @@ func _delete_all():
 # timer leaves a little time between stage end and the next stage start or game end
 func _on_RespawnTimer_timeout():
 	if stage >= 10:
-		GameManager.end_game(END_MESSAGE % points)
+		GameManager.end_game(END_MESSAGE % points, points)
 		return
 	_spawn()
 
