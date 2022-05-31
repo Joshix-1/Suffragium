@@ -10,7 +10,7 @@ func setup(game_cfg: ConfigFile):
 
 	$VBoxContainer/Label.text = game_cfg.get_value("game", "name")
 	_on_VBoxContainer_draw()
-	
+
 	var icon: Texture = load(
 		str(game_cfg.get_meta("_folder_path"), game_cfg.get_value("game", "icon"))
 	)
@@ -45,6 +45,7 @@ func _on_VBoxContainer_draw():
 	# update the high_score displayed in $VBoxContainer/RichTextLabel
 	if $VBoxContainer/RichTextLabel.bbcode_text != text:
 		$VBoxContainer/RichTextLabel.bbcode_text = text
+
 
 func _on_loadbutton_pressed():
 	emit_signal("pressed", game_file)
