@@ -16,9 +16,16 @@ func _ready():
 
 
 func load_game(game_cfg: ConfigFile):
-	_last_loaded_game = game_cfg.get_meta("_game_name")
+	_last_loaded_game = game_cfg.get_meta("folder_name")
 	# load the games main scene
-	var scene = load(game_cfg.get_meta("_folder_path") + game_cfg.get_value("game", "main_scene"))
+	var scene = load(
+		(
+			"res://games/"
+			+ game_cfg.get_meta("folder_name")
+			+ "/"
+			+ game_cfg.get_value("game", "main_scene")
+		)
+	)
 	var err := get_tree().change_scene_to(scene)
 	if err != OK:
 		prints("Error", err)
@@ -85,7 +92,6 @@ func end_game(message := "", score = null, _status = null):
 			data["scores"] = []
 		data["scores"].append([score, player_name])
 		save_game_data("game_scores", _last_loaded_game, data)
-		GAMES[_last_loaded_game].set_meta("_high_score", get_high_score(_last_loaded_game))
 
 	# this behavior is subject to change
 	if message:
@@ -103,7 +109,7 @@ func _build_menu():
 	#making the buttons
 	for game_name in GAMES.keys():
 		var display = _preview_scene.instance()
-		display.setup(GAMES[game_name])
+		display.setup(GAMES[game_name], self)
 		display.connect("pressed", self, "load_game")
 		_grid.add_child(display)
 
@@ -117,9 +123,7 @@ func _find_games():
 		var file_name = dir.get_next()
 		while file_name != "":
 			if dir.current_is_dir():
-				var game_path = "res://games/" + file_name + "/game.cfg"
-
-				var err := _load_game_cfg_file(game_path, file_name)
+				var err := _load_game_cfg_file(file_name)
 				if err != OK:
 					prints("Error loading game cfg:", err)
 
@@ -127,13 +131,11 @@ func _find_games():
 
 
 # load a config file into _games
-func _load_game_cfg_file(path: String, game_name: String) -> int:
-	var f := ConfigFile.new()
-	var err := f.load(path)
+func _load_game_cfg_file(folder_name: String) -> int:
+	var config := ConfigFile.new()
+	var err := config.load("res://games/" + folder_name + "/game.cfg")
 	if err != OK:
 		return err
-	f.set_meta("_folder_path", path.get_base_dir() + "/")
-	f.set_meta("_game_name", game_name)
-	f.set_meta("_high_score", get_high_score(game_name))
-	GAMES[game_name] = f
+	config.set_meta("folder_name", folder_name)
+	GAMES[folder_name] = config
 	return OK

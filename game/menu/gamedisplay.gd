@@ -3,16 +3,23 @@ extends MarginContainer
 signal pressed(game_file)
 
 var game_file: ConfigFile
+var parent
 
 
-func setup(game_cfg: ConfigFile):
+func setup(game_cfg: ConfigFile, _parent):
 	game_file = game_cfg
+	parent = _parent
 
 	$VBoxContainer/Label.text = game_cfg.get_value("game", "name")
 	_on_VBoxContainer_draw()
 
 	var icon: Texture = load(
-		str(game_cfg.get_meta("_folder_path"), game_cfg.get_value("game", "icon"))
+		str(
+			"res://games/",
+			game_cfg.get_meta("folder_name"),
+			"/",
+			game_cfg.get_value("game", "icon")
+		)
 	)
 	if icon == null:
 		icon = load("res://icon.png")
@@ -37,7 +44,7 @@ func setup(game_cfg: ConfigFile):
 func _on_VBoxContainer_draw():
 	var text = game_file.get_value("game", "desc")
 
-	var high_score = game_file.get_meta("_high_score")
+	var high_score = parent.get_high_score(game_file.get_meta("folder_name"))
 	if high_score != null:
 		text += "\n\nHighscore: " + str(high_score)
 
