@@ -40,7 +40,6 @@ func save_game_data(file_name: String, data) -> int:
 	if not _last_loaded_game:
 		return ERR_INVALID_DATA
 	return _save_game_data(file_name, data, _last_loaded_game)
-	
 
 
 func _save_game_data(file_name: String, data, game: String) -> int:
