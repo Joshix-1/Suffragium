@@ -109,7 +109,7 @@ func _build_menu():
 	#making the buttons
 	for game_name in GAMES.keys():
 		var display = _preview_scene.instance()
-		display.setup(GAMES[game_name], self)
+		display.setup(GAMES[game_name])
 		display.connect("pressed", self, "load_game")
 		_grid.add_child(display)
 
