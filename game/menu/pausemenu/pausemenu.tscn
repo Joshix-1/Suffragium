@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://menu/pausemenu/pausemenu.gd" type="Script" id=1]
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 128
+script = ExtResource( 1 )
+
+[node name="Margin" type="MarginContainer" parent="."]
+pause_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ColorRect" type="ColorRect" parent="Margin"]
+margin_right = 1024.0
+margin_bottom = 600.0
+color = Color( 0, 0, 0, 0.380392 )
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+margin_left = 444.0
+margin_right = 580.0
+margin_bottom = 600.0
+size_flags_horizontal = 4
+
+[node name="Label" type="Label" parent="Margin/VBox"]
+margin_right = 136.0
+margin_bottom = 14.0
+text = "PAUSED"
+align = 1
+
+[node name="resumebtn" type="Button" parent="Margin/VBox"]
+margin_left = 37.0
+margin_top = 18.0
+margin_right = 98.0
+margin_bottom = 38.0
+size_flags_horizontal = 4
+text = "resume"
+
+[node name="restartbtn" type="Button" parent="Margin/VBox"]
+margin_left = 41.0
+margin_top = 42.0
+margin_right = 95.0
+margin_bottom = 62.0
+size_flags_horizontal = 4
+text = "restart"
+
+[node name="quitgamebtn" type="Button" parent="Margin/VBox"]
+margin_top = 66.0
+margin_right = 136.0
+margin_bottom = 86.0
+size_flags_horizontal = 4
+text = "back to gameselect"
+
+[node name="quittodesctopbtn" type="Button" parent="Margin/VBox"]
+margin_left = 14.0
+margin_top = 90.0
+margin_right = 122.0
+margin_bottom = 110.0
+size_flags_horizontal = 4
+text = "quit Suffragium"
+
+[node name="restartbtn4" type="Button" parent="Margin/VBox"]
+visible = false
+margin_left = 3.0
+margin_top = 114.0
+margin_right = 57.0
+margin_bottom = 134.0
+size_flags_horizontal = 4
+text = "restart"
+
+[connection signal="pressed" from="Margin/VBox/resumebtn" to="." method="hide"]
+[connection signal="pressed" from="Margin/VBox/restartbtn" to="." method="_on_restartbtn_pressed"]
+[connection signal="pressed" from="Margin/VBox/quitgamebtn" to="." method="_on_quitgamebtn_pressed"]
+[connection signal="pressed" from="Margin/VBox/quittodesctopbtn" to="." method="_on_quittodesctopbtn_pressed"]
