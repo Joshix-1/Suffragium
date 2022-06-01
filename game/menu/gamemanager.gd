@@ -102,17 +102,15 @@ func get_last_played(game = null):
 	)
 
 
-func get_played_time(game = null) -> String:
+func get_played_time(game = null) -> float:
 	game = _last_loaded_game if game == null else game
 	assert(game != "")
 	var player = get_current_player()
 	var data = _load_data("_game_meta_data", game)
 	if not "played_time" in data or not player in data["played_time"]:
-		return "0 s"
+		return 0.0
 	var played_time = data["played_time"][player] / 1000.0
-	if int(played_time) == played_time:
-		played_time = int(played_time)
-	return str(played_time, " s")
+	return played_time
 
 
 func get_high_score(game = null):

@@ -44,7 +44,8 @@ func _on_VBoxContainer_draw():
 	var text = (
 		game_file.get_value("game", "desc")
 		+ "\n\nPlayed: "
-		+ GameManager.get_played_time(game_id)
+		+ str(GameManager.get_played_time(game_id))
+		+ " s"
 	)
 
 	var last_played = GameManager.get_last_played(game_id)
