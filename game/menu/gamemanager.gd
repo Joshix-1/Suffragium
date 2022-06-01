@@ -103,12 +103,12 @@ func get_current_player() -> String:
 	return "p"  # in future add here more logic
 
 
-func get_last_played(game = null):
+func get_last_played(game_id = null):
 	"""Get the time the current player played the currently running game last."""
-	game = _last_loaded_game if game == null else game
-	assert(game != "")
+	game_id = _last_loaded_game if game_id == null else game_id
+	assert(game_id != "")
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game)
+	var data = _load_data("_game_meta_data", game_id)
 	if not "last_played" in data or not player in data["last_played"]:
 		return null
 	var dt = OS.get_datetime_from_unix_time(data["last_played"][player])
@@ -118,25 +118,25 @@ func get_last_played(game = null):
 	)
 
 
-func get_played_time(game = null) -> float:
+func get_played_time(game_id = null) -> float:
 	"""Get time the current player played the currently running game."""
-	game = _last_loaded_game if game == null else game
-	assert(game != "")
+	game_id = _last_loaded_game if game_id == null else game_id
+	assert(game_id != "")
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game)
+	var data = _load_data("_game_meta_data", game_id)
 	if not "played_time" in data or not player in data["played_time"]:
 		return 0.0
 	var played_time = data["played_time"][player] / 1000.0
 	return played_time
 
 
-func get_high_score(game = null):
+func get_high_score(game_id = null):
 	"""Get the high_score of the current player for the currently running game."""
-	game = _last_loaded_game if game == null else game
-	if not game:  # game should be the folder_name, not null or ""
+	game_id = _last_loaded_game if game_id == null else game_id
+	if not game_id:  # game_id should be the folder_name, not null or ""
 		return null
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game)
+	var data = _load_data("_game_meta_data", game_id)
 
 	if not "scores" in data:
 		return null
