@@ -4,8 +4,8 @@
 All files related only to your game go into a folder inside `res://games/`. You shouldn't rename it after the game is first merged. 
 There are no rules what to call it but a good idea is to use your name and the games name (ex. "asecondguy_assimilator") to avoid any accidental collisions.
 
-## 2. Make a game.cfg
-The game.cfg file resides in your minigame folder. It defines how your game is displayed. 
+## 2. Make a `game.cfg`
+The `game.cfg` file resides in your minigame folder. It defines how your game is displayed. 
 If you are unsure, copy the game.cfg from the testgame and change the values.
 It will always contain all required and optional settings clearly marked.
 
