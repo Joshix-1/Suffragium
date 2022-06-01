@@ -1,6 +1,6 @@
-# How to add your own minigame - A Step by step Guide
+# How to add your own minigame - A step-by-step Guide
 
-## 1. Chose a folder
+## 1. Choose a folder
 All files related only to your game go into a folder inside `res://games/`. You shouldn't rename it after the game is first merged. 
 There are no rules what to call it but a good idea is to use your name and the games name (ex. "asecondguy_assimilator") to avoid any accidental collisions.
 
