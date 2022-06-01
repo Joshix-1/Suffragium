@@ -1,7 +1,7 @@
 extends Node
 
-# type of GAME_DATA_CACHE: Dictionary[String, Dictionary[String, Dictionary]]
-#                                   (file name)          (game id)  (the data)
+# type of GAME_DATA_CACHE: Dictionary[String, Dictionary]
+#                                   (file name) (the data)
 const GAME_DATA_CACHE := {}  # NEVER MODIFY THIS, IF YOU DON'T KNOW WHAT YOU ARE DOING!
 const GAMES := {}  # type: Dictionary[String, ConfigFile]
 const GAME_DISPLAYS := {}  # type: Dictionary[String, gamedisplay]
@@ -38,13 +38,14 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func _save_data(file_name: String, data, game: String) -> int:
+func _save_data(base_file_name: String, data, game: String) -> int:
 	"""Save data to a file with for the given game.
 	This is a private function, don't use this in a game
 	"""
+	var file_name = base_file_name + "_" + game
 	if not file_name in GAME_DATA_CACHE:
 		_load_data(file_name, game)
-	GAME_DATA_CACHE[file_name][game] = data
+	GAME_DATA_CACHE[file_name] = data
 	var file = File.new()
 	file.open("user://" + file_name + ".json", File.WRITE)
 	file.store_string(JSON.print(GAME_DATA_CACHE[file_name]))
@@ -52,13 +53,41 @@ func _save_data(file_name: String, data, game: String) -> int:
 	return OK
 
 
+func _load_data(base_file_name: String, game: String) -> Dictionary:
+	"""Load data from a file or GAME_DATA_CACHE and return the data for the game.
+	If something doesn't exist an empty Dictionary is returned, which is put in
+	the correct location in the GAME_DATA_CACHE Dictionary.
+	This is a private function, don't use this in a game.
+	"""
+	var file_name = base_file_name + "_" + game
+	if file_name in GAME_DATA_CACHE:
+		return GAME_DATA_CACHE[file_name]
+
+	GAME_DATA_CACHE[file_name] = {}  # populate with default
+	# read saved data from a file
+	var file = File.new()
+	file.open("user://" + file_name + ".json", File.READ)
+
+	if not file.is_open():
+		return GAME_DATA_CACHE[file_name]
+
+	var content = file.get_as_text()
+	file.close()
+
+	var parse_result = JSON.parse(content)
+	if not parse_result.error:
+		# put contents from file in the cache
+		GAME_DATA_CACHE[file_name] = parse_result.result
+
+	return GAME_DATA_CACHE[file_name]
+
+
 func save_game_data():
 	"""Save the changes to the dict returned by get_game_data()
 	This method is automatically called when a game ends.
 	"""
 	assert(_last_loaded_game != "")  # this should only be called if _last_loaded_game is set
-	var file_name = "_game_data_" + _last_loaded_game
-	_save_data(file_name, _load_data(file_name, _last_loaded_game), _last_loaded_game)
+	_save_data("game_data", _load_data("game_data", _last_loaded_game), _last_loaded_game)
 
 
 func get_game_data() -> Dictionary:
@@ -66,38 +95,11 @@ func get_game_data() -> Dictionary:
 	To save data. Just modify the returned Dictionary and call save_game_data().
 	"""
 	assert(_last_loaded_game != "")
-	var data = _load_data("_game_data_" + _last_loaded_game, _last_loaded_game)
+	var data = _load_data("game_data", _last_loaded_game)
 	var player = get_current_player()
 	if not player in data:
 		data[player] = {}
 	return data[player]
-
-
-func _load_data(file_name: String, game: String) -> Dictionary:
-	"""Load data from a file or GAME_DATA_CACHE and return the data for the game.
-	If something doesn't exist an empty Dictionary is returned, which is put in
-	the correct location in the GAME_DATA_CACHE Dictionary.
-	This is a private function, don't use this in a game.
-	"""
-	if not file_name in GAME_DATA_CACHE:
-		GAME_DATA_CACHE[file_name] = {}  # populate with default
-		# read saved data from a file
-		var file = File.new()
-		file.open("user://" + file_name + ".json", File.READ)
-		if file.is_open():
-			var content = file.get_as_text()
-			file.close()
-			var parse_result = JSON.parse(content)
-			if not parse_result.error:
-				var data = parse_result.result
-				for game in data.keys():
-					# put contents from file in the cache
-					GAME_DATA_CACHE[file_name][game] = data[game]
-	# if there isn't anything stored for the cache, put a new dict in cache
-	if not game in GAME_DATA_CACHE[file_name]:
-		GAME_DATA_CACHE[file_name][game] = {}
-
-	return GAME_DATA_CACHE[file_name][game]
 
 
 func get_current_player() -> String:
@@ -109,7 +111,7 @@ func get_last_played(game_id = null):
 	game_id = _last_loaded_game if game_id == null else game_id
 	assert(game_id != "")
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game_id)
+	var data = _load_data("game_meta_data", game_id)
 	if not "last_played" in data or not player in data["last_played"]:
 		return null
 	var dt = OS.get_datetime_from_unix_time(data["last_played"][player])
@@ -124,7 +126,7 @@ func get_played_time(game_id = null) -> float:
 	game_id = _last_loaded_game if game_id == null else game_id
 	assert(game_id != "")
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game_id)
+	var data = _load_data("game_meta_data", game_id)
 	if not "played_time" in data or not player in data["played_time"]:
 		return 0.0
 	var played_time = data["played_time"][player] / 1000.0
@@ -137,7 +139,7 @@ func get_high_score(game_id = null):
 	if not game_id:  # game_id should be the folder_name, not null or ""
 		return null
 	var player = get_current_player()
-	var data = _load_data("_game_meta_data", game_id)
+	var data = _load_data("game_meta_data", game_id)
 
 	if not "scores" in data:
 		return null
@@ -161,7 +163,9 @@ func end_game(message := "", score = null, _status = null):
 
 	assert(_last_loaded_game != "")  # should always be set here
 
-	var data = _load_data("_game_meta_data", _last_loaded_game)
+	var key
+
+	var data = _load_data("game_meta_data", _last_loaded_game)
 	if score != null:
 		if not "scores" in data:
 			data["scores"] = []
@@ -176,7 +180,7 @@ func end_game(message := "", score = null, _status = null):
 		data["played_time"][player_name] = 0
 	data["played_time"][player_name] += OS.get_ticks_msec() - _started_playing_game
 
-	_save_data("_game_meta_data", data, _last_loaded_game)
+	_save_data("game_meta_data", data, _last_loaded_game)
 
 	GAME_DISPLAYS[_last_loaded_game].update_text()
 

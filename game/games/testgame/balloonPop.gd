@@ -31,6 +31,13 @@ onready var _particles := $VBoxContainer/Particles2D
 
 func _ready():
 	_rng.randomize()
+	### start --- Data saving demo ---
+	# var data = GameManager.get_game_data()
+	# print("Loaded: ", data["num"] if "num" in data else null)
+	# data["num"] = _rng.randi()
+	# print("Saved: ", GameManager.get_game_data()["num"])
+	# GameManager.end_game()  # end game here to quickly test saving
+	#### end  --- Data saving demo ---
 	start()
 
 
