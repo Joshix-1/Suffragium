@@ -35,8 +35,8 @@ func _ready():
 	# var data = GameManager.get_game_data()
 	# print("Loaded: ", data["num"] if "num" in data else null)
 	# data["num"] = _rng.randi()
-	# print("Saved: ", GameManager.get_game_data()["num"])
-	# GameManager.end_game()  # end game here to quickly test saving
+	# print("Saved: ", data["num"])
+	# GameManager.end_game("", -data["num"])  # end game here to quickly test saving
 	#### end  --- Data saving demo ---
 	start()
 

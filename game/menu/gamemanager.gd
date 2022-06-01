@@ -38,38 +38,42 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func _save_data(base_file_name: String, data, game: String) -> int:
+func _save_data(file_name: String, data, game: String) -> int:
 	"""Save data to a file with for the given game.
 	This is a private function, don't use this in a game
 	"""
-	var file_name = base_file_name + "_" + game
-	if not file_name in GAME_DATA_CACHE:
-		_load_data(file_name, game)
-	GAME_DATA_CACHE[file_name] = data
+	var cache_key = get_current_player() + "/" + game + "/" + file_name
+	var directory = "user://" + get_current_player() + "/" + game + "/"
+	Directory.new().make_dir_recursive(directory)
+	if not cache_key in GAME_DATA_CACHE:
+		GAME_DATA_CACHE[cache_key] = _load_data(file_name, game)
+	GAME_DATA_CACHE[cache_key] = data
 	var file = File.new()
-	file.open("user://" + file_name + ".json", File.WRITE)
-	file.store_string(JSON.print(GAME_DATA_CACHE[file_name]))
+	file.open(directory + file_name + ".json", File.WRITE)
+	file.store_string(JSON.print(GAME_DATA_CACHE[cache_key]))
 	file.close()
 	return OK
 
 
-func _load_data(base_file_name: String, game: String) -> Dictionary:
+func _load_data(file_name: String, game: String) -> Dictionary:
 	"""Load data from a file or GAME_DATA_CACHE and return the data for the game.
 	If something doesn't exist an empty Dictionary is returned, which is put in
 	the correct location in the GAME_DATA_CACHE Dictionary.
 	This is a private function, don't use this in a game.
 	"""
-	var file_name = base_file_name + "_" + game
-	if file_name in GAME_DATA_CACHE:
-		return GAME_DATA_CACHE[file_name]
+	var cache_key = get_current_player() + "/" + game + "/" + file_name
+	var directory = "user://" + get_current_player() + "/" + game + "/"
+	Directory.new().make_dir_recursive(directory)
+	if cache_key in GAME_DATA_CACHE:
+		return GAME_DATA_CACHE[cache_key]
 
-	GAME_DATA_CACHE[file_name] = {}  # populate with default
+	GAME_DATA_CACHE[cache_key] = {}  # populate with default
 	# read saved data from a file
 	var file = File.new()
-	file.open("user://" + file_name + ".json", File.READ)
+	file.open(directory + file_name + ".json", File.READ)
 
 	if not file.is_open():
-		return GAME_DATA_CACHE[file_name]
+		return GAME_DATA_CACHE[cache_key]
 
 	var content = file.get_as_text()
 	file.close()
@@ -77,9 +81,9 @@ func _load_data(base_file_name: String, game: String) -> Dictionary:
 	var parse_result = JSON.parse(content)
 	if not parse_result.error:
 		# put contents from file in the cache
-		GAME_DATA_CACHE[file_name] = parse_result.result
+		GAME_DATA_CACHE[cache_key] = parse_result.result
 
-	return GAME_DATA_CACHE[file_name]
+	return GAME_DATA_CACHE[cache_key]
 
 
 func save_game_data():
@@ -95,11 +99,7 @@ func get_game_data() -> Dictionary:
 	To save data. Just modify the returned Dictionary and call save_game_data().
 	"""
 	assert(_last_loaded_game != "")
-	var data = _load_data("game_data", _last_loaded_game)
-	var player = get_current_player()
-	if not player in data:
-		data[player] = {}
-	return data[player]
+	return _load_data("game_data", _last_loaded_game)
 
 
 func get_current_player() -> String:
@@ -110,11 +110,10 @@ func get_last_played(game_id = null):
 	"""Get the time the current player played the currently running game last."""
 	game_id = _last_loaded_game if game_id == null else game_id
 	assert(game_id != "")
-	var player = get_current_player()
 	var data = _load_data("game_meta_data", game_id)
-	if not "last_played" in data or not player in data["last_played"]:
+	if not "last_played" in data:
 		return null
-	var dt = OS.get_datetime_from_unix_time(data["last_played"][player])
+	var dt = OS.get_datetime_from_unix_time(data["last_played"])
 	return (
 		"%04d-%02d-%02d %02d:%02d:%02d UTC"
 		% [dt["year"], dt["month"], dt["day"], dt["hour"], dt["minute"], dt["second"]]
@@ -125,12 +124,10 @@ func get_played_time(game_id = null) -> float:
 	"""Get time the current player played the currently running game."""
 	game_id = _last_loaded_game if game_id == null else game_id
 	assert(game_id != "")
-	var player = get_current_player()
 	var data = _load_data("game_meta_data", game_id)
-	if not "played_time" in data or not player in data["played_time"]:
+	if not "played_time" in data:
 		return 0.0
-	var played_time = data["played_time"][player] / 1000.0
-	return played_time
+	return data["played_time"] / 1000.0
 
 
 func get_high_score(game_id = null):
@@ -138,7 +135,6 @@ func get_high_score(game_id = null):
 	game_id = _last_loaded_game if game_id == null else game_id
 	if not game_id:  # game_id should be the folder_name, not null or ""
 		return null
-	var player = get_current_player()
 	var data = _load_data("game_meta_data", game_id)
 
 	if not "scores" in data:
@@ -147,7 +143,7 @@ func get_high_score(game_id = null):
 	var scores = data["scores"]
 	var high_score = null
 	for score in scores:
-		if score[1] == player and (high_score == null or score[0] > high_score):
+		if high_score == null or score[0] > high_score:
 			high_score = score[0]
 	return high_score
 
@@ -166,19 +162,17 @@ func end_game(message := "", score = null, _status = null):
 	var key
 
 	var data = _load_data("game_meta_data", _last_loaded_game)
+	
+	data["last_played"] = OS.get_unix_time()
+
+	if not "played_time" in data:
+		data["played_time"] = 0
+	data["played_time"] += OS.get_ticks_msec() - _started_playing_game
+
 	if score != null:
 		if not "scores" in data:
 			data["scores"] = []
-		data["scores"].append([score, player_name])
-
-	if not "last_played" in data:
-		data["last_played"] = {}
-	data["last_played"][player_name] = OS.get_unix_time()
-	if not "played_time" in data:
-		data["played_time"] = {}
-	if not player_name in data["played_time"]:
-		data["played_time"][player_name] = 0
-	data["played_time"][player_name] += OS.get_ticks_msec() - _started_playing_game
+		data["scores"].append([score, data["last_played"]])
 
 	_save_data("game_meta_data", data, _last_loaded_game)
 
