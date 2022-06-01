@@ -226,3 +226,21 @@ func _load_game_cfg_file(folder_name: String) -> int:
 	config.set_meta("folder_name", folder_name)
 	GAMES[folder_name] = config
 	return OK
+
+
+func _process(delta):
+	if Input.is_action_pressed("exit"):
+		_on_pause_button_pressed()
+
+
+func _on_pause_button_pressed():
+	if _last_loaded_game == "":
+		get_tree().quit(0)  # exit if on main screen  # TODO: ask for confirmation
+		return
+	# if in game pause the game.
+	#save_game_data()  # i'm not sure if this is a good idea
+	var already_played = OS.get_ticks_msec() - _started_playing_game
+	get_tree().paused = true
+	OS.alert("Press OK to resume.", "paused game")  # TODO: improve this
+	get_tree().paused = false
+	_started_playing_game = OS.get_ticks_msec() - already_played
