@@ -40,11 +40,20 @@ func setup(game_cfg: ConfigFile):
 
 
 func _on_VBoxContainer_draw():
-	var text = game_file.get_value("game", "desc")
+	var game_id = game_file.get_meta("folder_name")
+	var text = (
+		game_file.get_value("game", "desc")
+		+ "\n\nPlayed: "
+		+ GameManager.get_played_time(game_id)
+	)
 
-	var high_score = GameManager.get_high_score(null, game_file.get_meta("folder_name"))
+	var last_played = GameManager.get_last_played(game_id)
+	if last_played != null:
+		text += "\nLast played: " + last_played
+
+	var high_score = GameManager.get_high_score(game_id)
 	if high_score != null:
-		text += "\n\nHighscore: " + str(high_score)
+		text += "\nHighscore: " + str(high_score)
 
 	# update the high_score displayed in $VBoxContainer/RichTextLabel
 	if $VBoxContainer/RichTextLabel.bbcode_text != text:

@@ -1,10 +1,11 @@
 extends Node
 
-const GAME_DATA_CACHE := {}  # type: Dictionary[String, Dictionary[String, ...]]
+const GAME_DATA_CACHE := {}  # type: Dictionary[String, Dictionary[String, Dictionary]]
 const GAMES := {}  # type: Dictionary[String, ConfigFile]
 
 var _preview_scene := preload("res://menu/gamedisplay.tscn")
 var _last_loaded_game: String = ""
+var _started_playing_game: int = 0
 
 onready var _grid := $mainmenu/ScrollContainer/GridContainer
 onready var _main := $mainmenu
@@ -17,6 +18,7 @@ func _ready():
 
 func load_game(game_cfg: ConfigFile):
 	_last_loaded_game = game_cfg.get_meta("folder_name")
+	_started_playing_game = OS.get_ticks_msec()
 	# load the games main scene
 	var scene = load(
 		(
@@ -33,19 +35,10 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-func save_game_data(file_name: String, data) -> int:
-	if file_name.begins_with("_"):
-		# file_name cannot begin with "_", that is reserved for special stuff
-		return ERR_INVALID_PARAMETER
-	if not _last_loaded_game:
-		return ERR_INVALID_DATA
-	return _save_game_data(file_name, data, _last_loaded_game)
-
-
-func _save_game_data(file_name: String, data, game: String) -> int:
+func _save_data(file_name: String, data, game: String) -> int:
 	# private function, don't use this in a game
 	if not file_name in GAME_DATA_CACHE:
-		_load_game_data(file_name, game)
+		_load_data(file_name, game)
 	GAME_DATA_CACHE[file_name][game] = data
 	var file = File.new()
 	file.open("user://" + file_name + ".json", File.WRITE)
@@ -54,16 +47,23 @@ func _save_game_data(file_name: String, data, game: String) -> int:
 	return OK
 
 
-func load_game_data(file_name: String):
-	if file_name.begins_with("_"):
-		# file_name cannot begin with "_", that is reserved for special stuff
-		return null
-	if not _last_loaded_game:
-		return null
-	return _load_game_data(file_name, _last_loaded_game)
+func save_game_data():
+	# this should only be called if _last_loaded_game is set
+	assert(_last_loaded_game != "")
+	_save_data("_game_data", _load_data("_game_data", _last_loaded_game), _last_loaded_game)
 
 
-func _load_game_data(file_name: String, game: String):
+func get_game_data() -> Dictionary:
+	# this should only be called if _last_loaded_game is set
+	assert(_last_loaded_game != "")
+	var data = _load_data("_game_data", _last_loaded_game)
+	var player = get_current_player()
+	if not player in data:
+		data[player] = {}
+	return data[player]
+
+
+func _load_data(file_name: String, game: String) -> Dictionary:
 	# private function, don't use this in a game
 	if not file_name in GAME_DATA_CACHE:
 		GAME_DATA_CACHE[file_name] = {}  # populate with default
@@ -78,23 +78,53 @@ func _load_game_data(file_name: String, game: String):
 				for game in data.keys():
 					GAME_DATA_CACHE[file_name][game] = data[game]
 
-	if game in GAME_DATA_CACHE[file_name]:
-		return GAME_DATA_CACHE[file_name][game]
+	if not game in GAME_DATA_CACHE[file_name]:
+		GAME_DATA_CACHE[file_name][game] = {}
 
-	return null
+	return GAME_DATA_CACHE[file_name][game]
 
 
-func get_high_score(player = null, game = null):
+func get_current_player() -> String:
+	return "p"  # in future add here more logic
+
+
+func get_last_played(game = null):
+	game = _last_loaded_game if game == null else game
+	assert(game != "")
+	var player = get_current_player()
+	var data = _load_data("_game_meta_data", game)
+	if not "last_played" in data or not player in data["last_played"]:
+		return null
+	var dt = OS.get_datetime_from_unix_time(data["last_played"][player])
+	return (
+		"%04d-%02d-%02d %02d:%02d:%02d UTC"
+		% [dt["year"], dt["month"], dt["day"], dt["hour"], dt["minute"], dt["second"]]
+	)
+
+
+func get_played_time(game = null) -> String:
+	game = _last_loaded_game if game == null else game
+	assert(game != "")
+	var player = get_current_player()
+	var data = _load_data("_game_meta_data", game)
+	if not "played_time" in data or not player in data["played_time"]:
+		return "0 s"
+	var played_time = data["played_time"][player] / 1000.0
+	if int(played_time) == played_time:
+		played_time = int(played_time)
+	return str(played_time, " s")
+
+
+func get_high_score(game = null):
 	game = _last_loaded_game if game == null else game
 	if not game:  # game should be the folder_name, not null or ""
 		return null
-	if player == null:
-		player = "p"  # as default; this is just for the future
-	var data = _load_game_data("_game_scores", game)
-	if data == null:
-		return null
+	var player = get_current_player()
+	var data = _load_data("_game_meta_data", game)
+
 	if not "scores" in data:
 		return null
+
 	var scores = data["scores"]
 	var high_score = null
 	for score in scores:
@@ -105,25 +135,38 @@ func get_high_score(player = null, game = null):
 
 # return to the level select
 func end_game(message := "", score = null, _status = null):
-	var player_name = "p"  # this is here to allow for future addition of player names
+	var player_name = get_current_player()
 
 	get_tree().change_scene("res://menu/emptySzene.tscn")
 	_main.show()
 
-	if _last_loaded_game and score != null:
-		var data = _load_game_data("_game_scores", _last_loaded_game)
-		if not data:
-			data = {}
+	save_game_data()  # save the data stored while the game was playing
+
+	assert(_last_loaded_game != "")  # should always be set here
+
+	var data = _load_data("_game_meta_data", _last_loaded_game)
+	if score != null:
 		if not "scores" in data:
 			data["scores"] = []
 		data["scores"].append([score, player_name])
-		_save_game_data("_game_scores", data, _last_loaded_game)
+
+	if not "last_played" in data:
+		data["last_played"] = {}
+	data["last_played"][player_name] = OS.get_unix_time()
+	if not "played_time" in data:
+		data["played_time"] = {}
+	if not player_name in data["played_time"]:
+		data["played_time"][player_name] = 0
+	data["played_time"][player_name] += OS.get_ticks_msec() - _started_playing_game
+
+	_save_data("_game_meta_data", data, _last_loaded_game)
 
 	# this behavior is subject to change
 	if message:
 		OS.alert(message)
 
 	_last_loaded_game = ""
+	_started_playing_game = 0
 
 
 # build the menu from configs in _games
