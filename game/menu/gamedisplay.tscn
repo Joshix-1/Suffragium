@@ -98,5 +98,4 @@ margin_bottom = 92.0
 rect_min_size = Vector2( 200, 50 )
 size_flags_vertical = 3
 
-[connection signal="draw" from="VBoxContainer" to="." method="_on_VBoxContainer_draw"]
 [connection signal="pressed" from="VBoxContainer/loadbutton" to="." method="_on_loadbutton_pressed"]

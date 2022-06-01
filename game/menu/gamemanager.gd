@@ -2,6 +2,7 @@ extends Node
 
 const GAME_DATA_CACHE := {}  # type: Dictionary[String, Dictionary[String, Dictionary]]
 const GAMES := {}  # type: Dictionary[String, ConfigFile]
+const GAME_DISPLAYS := {}  # type: Dictionary[String, gamedisplay]
 
 var _preview_scene := preload("res://menu/gamedisplay.tscn")
 var _last_loaded_game: String = ""
@@ -159,6 +160,8 @@ func end_game(message := "", score = null, _status = null):
 
 	_save_data("_game_meta_data", data, _last_loaded_game)
 
+	GAME_DISPLAYS[_last_loaded_game].update_text()
+
 	_last_loaded_game = ""
 	_started_playing_game = 0
 
@@ -174,11 +177,12 @@ func _build_menu():
 	_main.show()
 
 	#making the buttons
-	for game_name in GAMES.keys():
+	for game_id in GAMES.keys():
 		var display = _preview_scene.instance()
-		display.setup(GAMES[game_name])
+		display.setup(GAMES[game_id])
 		display.connect("pressed", self, "load_game")
 		_grid.add_child(display)
+		GAME_DISPLAYS[game_id] = display
 
 
 # go through every folder inside res://games/ and try to load the game.cfg into _games

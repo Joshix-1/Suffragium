@@ -9,7 +9,7 @@ func setup(game_cfg: ConfigFile):
 	game_file = game_cfg
 
 	$VBoxContainer/Label.text = game_cfg.get_value("game", "name")
-	_on_VBoxContainer_draw()
+	update_text()
 
 	var icon: Texture = load(
 		str(
@@ -39,7 +39,7 @@ func setup(game_cfg: ConfigFile):
 	$InfoDialog/Container/descCont/Statslab.text = text
 
 
-func _on_VBoxContainer_draw():
+func update_text():
 	var game_id = game_file.get_meta("folder_name")
 	var text = (
 		game_file.get_value("game", "desc")
@@ -57,8 +57,7 @@ func _on_VBoxContainer_draw():
 		text += "\nHighscore: " + str(high_score)
 
 	# update the high_score displayed in $VBoxContainer/RichTextLabel
-	if $VBoxContainer/RichTextLabel.bbcode_text != text:
-		$VBoxContainer/RichTextLabel.bbcode_text = text
+	$VBoxContainer/RichTextLabel.bbcode_text = text
 
 
 func _on_loadbutton_pressed():
