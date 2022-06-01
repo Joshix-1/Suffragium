@@ -161,12 +161,12 @@ func end_game(message := "", score = null, _status = null):
 
 	_save_data("_game_meta_data", data, _last_loaded_game)
 
+	_last_loaded_game = ""
+	_started_playing_game = 0
+
 	# this behavior is subject to change
 	if message:
 		OS.alert(message)
-
-	_last_loaded_game = ""
-	_started_playing_game = 0
 
 
 # build the menu from configs in _games
