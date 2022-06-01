@@ -1,6 +1,8 @@
 extends Node
 
-const GAME_DATA_CACHE := {}  # type: Dictionary[String, Dictionary[String, Dictionary]]
+# type of GAME_DATA_CACHE: Dictionary[String, Dictionary[String, Dictionary]]
+#                                   (file name)          (game id)  (the data)
+const GAME_DATA_CACHE := {}  # NEVER MODIFY THIS, IF YOU DON'T KNOW WHAT YOU ARE DOING!
 const GAMES := {}  # type: Dictionary[String, ConfigFile]
 const GAME_DISPLAYS := {}  # type: Dictionary[String, gamedisplay]
 
@@ -37,7 +39,9 @@ func load_game(game_cfg: ConfigFile):
 
 
 func _save_data(file_name: String, data, game: String) -> int:
-	# private function, don't use this in a game
+	"""Save data to a file with for the given game.
+	This is a private function, don't use this in a game
+	"""
 	if not file_name in GAME_DATA_CACHE:
 		_load_data(file_name, game)
 	GAME_DATA_CACHE[file_name][game] = data
@@ -49,13 +53,17 @@ func _save_data(file_name: String, data, game: String) -> int:
 
 
 func save_game_data():
-	# this should only be called if _last_loaded_game is set
-	assert(_last_loaded_game != "")
+	"""Save the changes to the dict returned by get_game_data()
+	This method is automatically called when a game ends.
+	"""
+	assert(_last_loaded_game != "")  # this should only be called if _last_loaded_game is set
 	_save_data("_game_data", _load_data("_game_data", _last_loaded_game), _last_loaded_game)
 
 
 func get_game_data() -> Dictionary:
-	# this should only be called if _last_loaded_game is set
+	"""Get the game data for the current player and the current game.
+	To save data. Just modify the returned Dictionary and call save_game_data().
+	"""
 	assert(_last_loaded_game != "")
 	var data = _load_data("_game_data", _last_loaded_game)
 	var player = get_current_player()
@@ -65,9 +73,14 @@ func get_game_data() -> Dictionary:
 
 
 func _load_data(file_name: String, game: String) -> Dictionary:
-	# private function, don't use this in a game
+	"""Load data from a file or GAME_DATA_CACHE and return the data for the game.
+	If something doesn't exist an empty Dictionary is returned, which is put in
+	the correct location in the GAME_DATA_CACHE Dictionary.
+	This is a private function, don't use this in a game.
+	"""
 	if not file_name in GAME_DATA_CACHE:
 		GAME_DATA_CACHE[file_name] = {}  # populate with default
+		# read saved data from a file
 		var file = File.new()
 		file.open("user://" + file_name + ".json", File.READ)
 		if file.is_open():
@@ -77,8 +90,9 @@ func _load_data(file_name: String, game: String) -> Dictionary:
 			if not parse_result.error:
 				var data = parse_result.result
 				for game in data.keys():
+					# put contents from file in the cache
 					GAME_DATA_CACHE[file_name][game] = data[game]
-
+	# if there isn't anything stored for the cache, put a new dict in cache
 	if not game in GAME_DATA_CACHE[file_name]:
 		GAME_DATA_CACHE[file_name][game] = {}
 
@@ -90,6 +104,7 @@ func get_current_player() -> String:
 
 
 func get_last_played(game = null):
+	"""Get the time the current player played the currently running game last."""
 	game = _last_loaded_game if game == null else game
 	assert(game != "")
 	var player = get_current_player()
@@ -104,6 +119,7 @@ func get_last_played(game = null):
 
 
 func get_played_time(game = null) -> float:
+	"""Get time the current player played the currently running game."""
 	game = _last_loaded_game if game == null else game
 	assert(game != "")
 	var player = get_current_player()
@@ -115,6 +131,7 @@ func get_played_time(game = null) -> float:
 
 
 func get_high_score(game = null):
+	"""Get the high_score of the current player for the currently running game."""
 	game = _last_loaded_game if game == null else game
 	if not game:  # game should be the folder_name, not null or ""
 		return null

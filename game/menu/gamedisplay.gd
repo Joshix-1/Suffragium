@@ -4,6 +4,8 @@ signal pressed(game_file)
 
 var game_file: ConfigFile
 
+onready var _description = $VBoxContainer/RichTextLabel
+
 
 func setup(game_cfg: ConfigFile):
 	game_file = game_cfg
@@ -57,7 +59,7 @@ func update_text():
 		text += "\nHighscore: " + str(high_score)
 
 	# update the high_score displayed in $VBoxContainer/RichTextLabel
-	$VBoxContainer/RichTextLabel.bbcode_text = text
+	_description.bbcode_text = text
 
 
 func _on_loadbutton_pressed():
