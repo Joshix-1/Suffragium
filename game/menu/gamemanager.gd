@@ -162,7 +162,7 @@ func end_game(message := "", score = null, _status = null):
 	var key
 
 	var data = _load_data("game_meta_data", _last_loaded_game)
-	
+
 	data["last_played"] = OS.get_unix_time()
 
 	if not "played_time" in data:
