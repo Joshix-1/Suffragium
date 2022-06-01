@@ -3,7 +3,7 @@ extends MarginContainer
 
 const END_MESSAGE := "You got %s points!"
 const COLOR_MESSAGE := "Pop a %s balloon"
-const STATUS_MESSAGE := "You'r in stage %s/10 and have %s points! (Your highscore is: %s)"
+const STATUS_MESSAGE := "You're in stage %s/10 and have %s points! (Your highscore is: %s)"
 
 var balloon_scene := preload("res://games/testgame/balloon.tscn")
 
