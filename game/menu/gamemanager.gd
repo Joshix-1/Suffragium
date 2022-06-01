@@ -57,7 +57,8 @@ func save_game_data():
 	This method is automatically called when a game ends.
 	"""
 	assert(_last_loaded_game != "")  # this should only be called if _last_loaded_game is set
-	_save_data("_game_data", _load_data("_game_data", _last_loaded_game), _last_loaded_game)
+	var file_name = "_game_data_" + _last_loaded_game
+	_save_data(file_name, _load_data(file_name, _last_loaded_game), _last_loaded_game)
 
 
 func get_game_data() -> Dictionary:
@@ -65,7 +66,7 @@ func get_game_data() -> Dictionary:
 	To save data. Just modify the returned Dictionary and call save_game_data().
 	"""
 	assert(_last_loaded_game != "")
-	var data = _load_data("_game_data", _last_loaded_game)
+	var data = _load_data("_game_data_" + _last_loaded_game, _last_loaded_game)
 	var player = get_current_player()
 	if not player in data:
 		data[player] = {}
