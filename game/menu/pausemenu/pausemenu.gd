@@ -56,7 +56,7 @@ func _update_menu():
 func _on_restartbtn_pressed():
 	var game: Node = get_tree().root.get_children()[-1]
 	if game.has_method("restart"):
-		game.reset()
+		game.restart()
 		hide()
 
 
