@@ -4,6 +4,7 @@ signal pause_menu_opened
 signal pause_menu_closed
 
 onready var _main := $Margin
+onready var _reset_btn := $Margin/VBox/restartbtn
 
 
 func _ready():
@@ -35,7 +36,8 @@ func show():
 func _update_menu():
 	var game: ConfigFile = GameManager.last_loaded_game
 	# change the menu base on the game.cfg settings.
-#	if game.get_value()
+	var resetable: bool = game.get_value("features", "allow_restart", false)
+	_reset_btn.visible = resetable
 
 
 func hide():
@@ -46,8 +48,9 @@ func hide():
 
 func _on_restartbtn_pressed():
 	var game: Node = get_tree().root.get_children()[-1]
-	if game.has_method("reset"):
+	if game.has_method("restart"):
 		game.reset()
+		hide()
 
 
 func _on_quitgamebtn_pressed():
