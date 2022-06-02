@@ -1,7 +1,8 @@
 extends Node
 
-var _games = []
 var last_loaded_game
+
+var _games = []
 var _preview_scene := preload("res://menu/gamedisplay.tscn")
 
 onready var _grid := $mainmenu/ScrollContainer/GridContainer
