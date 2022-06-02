@@ -29,6 +29,7 @@ func load_game(game_cfg: ConfigFile):
 func end_game(message := "", _status = null):
 	get_tree().change_scene("res://menu/emptySzene.tscn")
 	_main.show()
+	last_loaded_game = null
 	# this behavior is subject to change
 	if !message.empty():
 		OS.alert(message)

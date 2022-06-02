@@ -19,7 +19,7 @@ func _input(event):
 	if event.is_echo():
 		return
 
-	if _main.visible:
+	if is_open():
 		hide()
 	else:
 		show()
@@ -33,17 +33,24 @@ func show():
 	_update_menu()
 
 
-func _update_menu():
-	var game: ConfigFile = GameManager.last_loaded_game
-	# change the menu base on the game.cfg settings.
-	var resetable: bool = game.get_value("features", "allow_restart", false)
-	_reset_btn.visible = resetable
-
-
 func hide():
 	_main.hide()
 	emit_signal("pause_menu_closed")
 	get_tree().paused = false
+
+
+func is_open():
+	return _main.visible
+
+
+func _update_menu():
+	var game: ConfigFile = GameManager.last_loaded_game
+	if !is_instance_valid(game):
+		# when no game is loaded use an empty config.
+		game = ConfigFile.new()
+	# change the menu base on the game.cfg settings.
+	var resetable: bool = game.get_value("features", "allow_restart", false)
+	_reset_btn.visible = resetable
 
 
 func _on_restartbtn_pressed():
