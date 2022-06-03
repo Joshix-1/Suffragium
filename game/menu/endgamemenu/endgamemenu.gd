@@ -1,11 +1,7 @@
 extends CanvasLayer
 
-signal pause_menu_opened
-signal pause_menu_closed
-
 onready var _main := $Margin
-onready var _restart_btn := $Margin/VBox/restartbtn
-onready var _quit_game_btn := $Margin/VBox/quitgamebtn
+onready var _menu_text := $Margin/VBox/Label
 
 
 func _ready():
@@ -21,33 +17,23 @@ func _input(event):
 		return
 
 	if is_open():
-		hide()
-	else:
-		show()
-	get_tree().set_input_as_handled()
+		_on_restartbtn_pressed()
+		get_tree().set_input_as_handled()
 
 
-func show():
+func show(text: String):
+	_menu_text.text = text
 	_main.show()
-	emit_signal("pause_menu_opened")
 	get_tree().paused = true
-	_update_menu()
 
 
 func hide():
 	_main.hide()
-	emit_signal("pause_menu_closed")
 	get_tree().paused = false
 
 
 func is_open():
 	return _main.visible
-
-
-func _update_menu():
-	var is_in_game = null != GameManager.last_loaded_game
-	_restart_btn.visible = is_in_game
-	_quit_game_btn.visible = is_in_game
 
 
 func _on_restartbtn_pressed():
@@ -60,10 +46,5 @@ func _on_restartbtn_pressed():
 
 
 func _on_quitgamebtn_pressed():
-	GameManager.end_game("")
 	hide()
-
-
-func _on_quittodesctopbtn_pressed():
-	GameManager.end_game("")
-	get_tree().quit()
+	GameManager.open_gamemenu()

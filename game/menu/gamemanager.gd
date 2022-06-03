@@ -26,14 +26,19 @@ func load_game(game_cfg: ConfigFile):
 	_main.hide()
 
 
-# return to the level select
-func end_game(message := "", _status = null):
+func open_gamemenu():
 	get_tree().change_scene("res://menu/emptySzene.tscn")
 	_main.show()
 	last_loaded_game = null
+
+
+# return to the level select
+func end_game(message := "", _status = null):
 	# this behavior is subject to change
-	if !message.empty():
-		OS.alert(message)
+	if message.empty():
+		open_gamemenu()
+	else:
+		EndGameMenu.show(message)
 
 
 # build the menu from configs in _games
