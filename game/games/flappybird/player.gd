@@ -13,6 +13,7 @@ var motion: Vector2 = Vector2()
 var wall: PackedScene = preload("res://games/flappybird/wall_node.tscn")
 var score: int = 0
 var started: bool = false
+var ended: bool = false
 
 onready var _score_label: Label = $"../../CanvasLayer/ScoreLabel"
 onready var _start_label: Label = $"../../CanvasLayer/StartLabel"
@@ -20,6 +21,12 @@ onready var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _physics_process(delta):
+	if ended:
+		# return early if the game ended to fix a bug where the end_game_menu
+		# would pop up a second time after pressing resume when the bird died
+		# from falling down
+		return
+
 	# handle game start
 	if not started:
 		if Input.is_action_just_pressed("flap"):
@@ -27,7 +34,7 @@ func _physics_process(delta):
 		return
 
 	if position.y > 130:
-		GameManager.end_game(END_MESSAGE % score, score)
+		end_game()
 		return
 
 	if Input.is_action_just_pressed("flap"):
@@ -45,6 +52,11 @@ func start_game():
 	_start_label.visible = false
 	_rng.randomize()
 	started = true
+
+
+func end_game():
+	ended = true
+	GameManager.end_game(END_MESSAGE % score, score)
 
 
 # flap when player presses ,,space"
@@ -90,4 +102,4 @@ func _on_Hitbox_body_entered(body):
 	if body.name == "Wall":
 		# here would come a death sound when player dies ($Sound_GameEnd)
 		# when the gamemanager is evolved enough to handle that, ill add it
-		GameManager.end_game(END_MESSAGE % score, score)
+		end_game()
